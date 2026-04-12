@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cave Family Accounts</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+      background: #eef1f5;
+      color: #2c3e50;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: #1a252f;
+      color: white;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .header h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.03em; }
+
+    .month-nav { display: flex; align-items: center; gap: 14px; }
+    .month-nav button {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .month-nav button:hover { background: rgba(255,255,255,0.28); }
+    .month-nav button:disabled { opacity: 0.3; cursor: default; }
+    #month-display { font-size: 1.1rem; font-weight: 600; min-width: 160px; text-align: center; }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      background: #2c3e50;
+      padding: 10px 28px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 7px 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      transition: filter 0.15s, transform 0.1s;
+    }
+    .btn:hover  { filter: brightness(1.1); }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; filter: none; }
+
+    .btn-green  { background: #27ae60; color: #fff; }
+    .btn-blue   { background: #2980b9; color: #fff; }
+    .btn-orange { background: #e67e22; color: #fff; }
+    .btn-slate  { background: #566573; color: #fff; }
+
+    .toolbar-sep { width: 1px; height: 28px; background: rgba(255,255,255,0.15); margin: 0 4px; }
+
+    .status-badge {
+      margin-left: auto;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .status-editing { background: #e67e22; color: #fff; }
+    .status-saved   { background: #27ae60; color: #fff; }
+
+    /* ── LAYOUT ── */
+    .content {
+      max-width: 960px;
+      margin: 24px auto;
+      padding: 0 20px 40px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    /* ── PANELS ── */
+    .panel {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+    .panel-title {
+      padding: 11px 18px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #fff;
+    }
+    .panel-title.green  { background: #27ae60; }
+    .panel-title.blue   { background: #2980b9; }
+
+    /* ── ROWS ── */
+    .row {
+      display: flex;
+      align-items: center;
+      padding: 9px 18px;
+      border-bottom: 1px solid #f0f2f5;
+      gap: 10px;
+    }
+    .row:last-child { border-bottom: none; }
+    .row.amber-row  { background: #fff8f0; }
+    .row.split-row  { background: #f0f7ff; }
+    .row.note       { padding: 6px 18px 10px; }
+
+    .row-label {
+      flex: 1;
+      font-size: 0.9rem;
+    }
+    .row-label small {
+      display: block;
+      font-size: 0.73rem;
+      color: #999;
+      margin-top: 2px;
+    }
+    .row-label.amber { color: #c0693a; }
+
+    .row-value { width: 130px; }
+    .row-value input {
+      width: 100%;
+      text-align: right;
+      border: 1px solid #d5dbe3;
+      border-radius: 5px;
+      padding: 6px 9px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: #fff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .row-value input:focus {
+      outline: none;
+      border-color: #2980b9;
+      box-shadow: 0 0 0 3px rgba(41,128,185,0.12);
+    }
+    .row-value input[readonly] {
+      background: transparent;
+      border-color: transparent;
+      color: #555;
+      cursor: default;
+    }
+    .row-value input.calc {
+      background: #f7f8fa;
+      border-color: transparent;
+      color: #c0693a;
+      font-style: italic;
+    }
+    input.readonly-mode {
+      background: transparent !important;
+      border-color: transparent !important;
+      color: #333 !important;
+      cursor: default !important;
+      pointer-events: none;
+    }
+
+    /* ── TOTALS PANEL ── */
+    .totals-panel {
+      grid-column: 1 / -1;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+    .totals-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .total-cell {
+      padding: 20px 24px;
+      text-align: center;
+      border-right: 1px solid #f0f2f5;
+    }
+    .total-cell:last-child { border-right: none; }
+    .total-cell .t-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #95a3b3;
+      margin-bottom: 8px;
+    }
+    .total-cell .t-value {
+      font-size: 1.7rem;
+      font-weight: 800;
+    }
+    .c-dark   { color: #2c3e50; }
+    .c-red    { color: #c0392b; }
+    .c-blue   { color: #2471a3; }
+    .c-green  { color: #1e8449; }
+    .c-orange { color: #c0693a; }
+
+    .amber-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 24px;
+      background: #fff8f0;
+      border-top: 1px solid #f0e8d8;
+      font-size: 0.88rem;
+    }
+    .amber-summary .a-label { color: #c0693a; }
+    .amber-summary .a-val   { color: #c0693a; font-weight: 700; }
+
+    .savings-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: #f0fff6;
+      border-top: 2px solid #27ae60;
+    }
+    .savings-bar .s-label { font-weight: 700; font-size: 1rem; }
+    .savings-bar .s-value { font-size: 1.5rem; font-weight: 800; }
+
+    .date-bar {
+      padding: 9px 24px;
+      text-align: right;
+      font-size: 0.82rem;
+      color: #aaa;
+      border-top: 1px solid #f0f2f5;
+    }
+
+    /* ── MODAL ── */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px;
+      max-width: 540px;
+      width: 92%;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+    }
+    .modal h2 { font-size: 1.1rem; margin-bottom: 10px; }
+    .modal p  { color: #666; font-size: 0.88rem; line-height: 1.5; margin-bottom: 12px; }
+    .modal code {
+      background: #f4f6f8;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.85em;
+    }
+    .modal textarea {
+      width: 100%;
+      height: 180px;
+      border: 1px solid #d5dbe3;
+      border-radius: 6px;
+      padding: 10px;
+      font-family: 'Menlo', 'Monaco', monospace;
+      font-size: 0.82rem;
+      resize: vertical;
+    }
+    .modal textarea:focus { outline: none; border-color: #2980b9; }
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 16px;
+    }
+
+    /* ── NO MONTHS ── */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 60px 20px;
+      color: #aaa;
+    }
+    .empty-state h2 { font-size: 1.2rem; margin-bottom: 10px; color: #888; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>Cave Family Accounts</h1>
+  <div class="month-nav">
+    <button id="btn-prev" onclick="navigateMonth(-1)" title="Previous month">&#8592;</button>
+    <div id="month-display">—</div>
+    <button id="btn-next" onclick="navigateMonth(1)" title="Next month">&#8594;</button>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <button class="btn btn-green"  onclick="newMonth()">+ New Month</button>
+  <div class="toolbar-sep"></div>
+  <button class="btn btn-blue"   id="btn-save"   onclick="saveMonth()">Save</button>
+  <button class="btn btn-orange" id="btn-edit"   onclick="editMonth()" style="display:none">Edit</button>
+  <div class="toolbar-sep"></div>
+  <button class="btn btn-slate"  onclick="exportJSON()" title="Download a backup file">Export JSON</button>
+  <button class="btn btn-slate"  onclick="openImport()"  title="Import from CSV or JSON backup">Import</button>
+  <span class="status-badge status-editing" id="status-badge">Editing</span>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="content" id="content">
+
+  <!-- Accounts panel -->
+  <div class="panel">
+    <div class="panel-title green">Bank Accounts</div>
+
+    <div class="row">
+      <div class="row-label">M A Cave Midland Current</div>
+      <div class="row-value"><input type="number" id="a_mac"      step="0.01" min="0" placeholder="0.00" oninput="calc()"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">M A &amp; K M Midland Current</div>
+      <div class="row-value"><input type="number" id="a_makm"     step="0.01" min="0" placeholder="0.00" oninput="calc()"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">Micks HSBC Loyalty ISA</div>
+      <div class="row-value"><input type="number" id="a_misa"     step="0.01" min="0" placeholder="0.00" oninput="calc()"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">
+        Kaths HSC Loyalty ISA
+        <small>Shared account — Kath &amp; Amber</small>
+      </div>
+      <div class="row-value"><input type="number" id="a_khsc"     step="0.01" min="0" placeholder="0.00" oninput="calc()"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">Premium Bonds</div>
+      <div class="row-value"><input type="number" id="a_premium"  step="0.01" min="0" placeholder="0.00" oninput="calc()"></div>
+    </div>
+
+    <div class="row split-row">
+      <div class="row-label">
+        Kath's share of HSC ISA
+        <small>Adjust when changed</small>
+      </div>
+      <div class="row-value"><input type="number" id="a_kshare"   step="0.01" min="0" placeholder="0.00" oninput="calc()"></div>
+    </div>
+
+    <div class="row amber-row">
+      <div class="row-label amber">
+        Amber's Account
+        <small>Auto-calculated (HSC ISA − Kath's share)</small>
+      </div>
+      <div class="row-value"><input type="number" id="a_amber" class="calc" readonly tabindex="-1"></div>
+    </div>
+  </div>
+
+  <!-- Debits panel -->
+  <div class="panel">
+    <div class="panel-title blue">Credit Cards / Debits</div>
+
+    <div class="row">
+      <div class="row-label">
+        HSBC Credit Card
+        <small>Carried over from last month</small>
+      </div>
+      <div class="row-value"><input type="number" id="d_hsbc" step="0.01" min="0" placeholder="0.00" oninput="calc()"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">Credit Card 2</div>
+      <div class="row-value"><input type="number" id="d_cc2"  step="0.01" min="0" placeholder="0.00" oninput="calc()"></div>
+    </div>
+    <div class="row">
+      <div class="row-label">Credit Card 3</div>
+      <div class="row-value"><input type="number" id="d_cc3"  step="0.01" min="0" placeholder="0.00" oninput="calc()"></div>
+    </div>
+  </div>
+
+  <!-- Totals panel -->
+  <div class="totals-panel">
+    <div class="totals-grid">
+      <div class="total-cell">
+        <div class="t-label">Total</div>
+        <div class="t-value c-dark" id="t-total">£0.00</div>
+      </div>
+      <div class="total-cell">
+        <div class="t-label">Total Debits</div>
+        <div class="t-value c-red" id="t-debits">£0.00</div>
+      </div>
+      <div class="total-cell">
+        <div class="t-label">Total − Debits</div>
+        <div class="t-value c-blue" id="t-net">£0.00</div>
+      </div>
+    </div>
+
+    <div class="amber-summary">
+      <span class="a-label">Amber's Account (excluded from Total)</span>
+      <span class="a-val" id="t-amber">£0.00</span>
+    </div>
+
+    <div class="savings-bar">
+      <span class="s-label">Total Savings / Debit this month</span>
+      <span class="s-value c-green" id="t-savings">£0.00</span>
+    </div>
+
+    <div class="date-bar" id="date-bar">Date: —</div>
+  </div>
+
+</div><!-- .content -->
+
+<!-- IMPORT MODAL -->
+<div class="overlay" id="import-overlay">
+  <div class="modal">
+    <h2>Import Data</h2>
+    <p>
+      <strong>From a JSON backup</strong> — paste the contents of a previously exported <code>.json</code> file. This merges all months into the app.<br><br>
+      <strong>From Google Sheets CSV</strong> — in Sheets go to <em>File → Download → CSV (.csv)</em> for the month you want. Paste the CSV text below. You will be asked which month it belongs to.
+    </p>
+    <textarea id="import-text" placeholder="Paste JSON backup or CSV text here…"></textarea>
+    <div class="modal-footer">
+      <button class="btn btn-slate"  onclick="closeImport()">Cancel</button>
+      <button class="btn btn-blue"   onclick="runImport()">Import</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONSTANTS & STORAGE
+// ═══════════════════════════════════════════════════════
+const STORE_KEY = 'cave_accounts_v1';
+
+function loadStore() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || { months: {} }; }
+  catch { return { months: {} }; }
+}
+function saveStore(d) {
+  localStorage.setItem(STORE_KEY, JSON.stringify(d));
+}
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let currentKey = null;   // "YYYY-MM"
+let editing    = true;
+
+const MONTHS_EN = ['January','February','March','April','May','June',
+                   'July','August','September','October','November','December'];
+
+function keyToLabel(k) {
+  const [y, m] = k.split('-');
+  return MONTHS_EN[parseInt(m,10) - 1] + ' ' + y;
+}
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function nextMonthKey(k) {
+  let [y, m] = k.split('-').map(Number);
+  m++; if (m > 12) { m = 1; y++; }
+  return `${y}-${String(m).padStart(2,'0')}`;
+}
+function todayDate() {
+  return new Date().toLocaleDateString('en-GB');
+}
+
+function blankEntry(key, carryOver, copyFrom) {
+  const e = {
+    key,
+    saved: false,
+    carry_over: carryOver ?? 0,
+    date: todayDate(),
+    accounts: { mac:'', makm:'', misa:'', khsc:'', premium:'', kshare:'' },
+    debits:   { hsbc:'', cc2:'', cc3:'' }
+  };
+  if (copyFrom) {
+    e.accounts = { ...copyFrom.accounts };
+    e.debits   = { ...copyFrom.debits   };
+  }
+  return e;
+}
+
+// ═══════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  const store = loadStore();
+  const keys  = sortedKeys(store);
+
+  if (keys.length === 0) {
+    currentKey = todayKey();
+    store.months[currentKey] = blankEntry(currentKey, 0, null);
+    saveStore(store);
+    editing = true;
+  } else {
+    currentKey = keys[keys.length - 1];
+    editing = !store.months[currentKey].saved;
+  }
+  render();
+});
+
+function sortedKeys(store) {
+  return Object.keys(store.months).sort();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+function render() {
+  const store = loadStore();
+  const entry = store.months[currentKey];
+  const keys  = sortedKeys(store);
+
+  document.getElementById('month-display').textContent = keyToLabel(currentKey);
+  document.getElementById('btn-prev').disabled = keys.indexOf(currentKey) <= 0;
+  document.getElementById('btn-next').disabled = keys.indexOf(currentKey) >= keys.length - 1;
+
+  // Populate fields
+  setVal('a_mac',     entry.accounts.mac);
+  setVal('a_makm',    entry.accounts.makm);
+  setVal('a_misa',    entry.accounts.misa);
+  setVal('a_khsc',    entry.accounts.khsc);
+  setVal('a_premium', entry.accounts.premium);
+  setVal('a_kshare',  entry.accounts.kshare);
+  setVal('d_hsbc',    entry.debits.hsbc);
+  setVal('d_cc2',     entry.debits.cc2);
+  setVal('d_cc3',     entry.debits.cc3);
+
+  document.getElementById('date-bar').textContent = 'Date: ' + entry.date;
+
+  editing = !entry.saved;
+  applyEditState();
+  calc();
+}
+
+function setVal(id, v) {
+  document.getElementById(id).value = (v === '' || v == null) ? '' : v;
+}
+function getNum(id) {
+  const v = parseFloat(document.getElementById(id).value);
+  return isNaN(v) ? 0 : v;
+}
+function gbp(n) {
+  const neg = n < 0;
+  return (neg ? '−£' : '£') + Math.abs(n).toFixed(2);
+}
+
+// ═══════════════════════════════════════════════════════
+// CALCULATE
+// ═══════════════════════════════════════════════════════
+function calc() {
+  const mac     = getNum('a_mac');
+  const makm    = getNum('a_makm');
+  const misa    = getNum('a_misa');
+  const khsc    = getNum('a_khsc');
+  const premium = getNum('a_premium');
+  const kshare  = getNum('a_kshare');
+
+  const amber  = khsc - kshare;
+  // Total = sum of all main accounts - Amber's portion
+  // equivalent to: mac + makm + misa + premium + kshare (kaths_hsc cancels)
+  const total  = mac + makm + misa + khsc + premium - amber;
+
+  document.getElementById('a_amber').value = amber.toFixed(2);
+
+  const dHsbc = getNum('d_hsbc');
+  const dCc2  = getNum('d_cc2');
+  const dCc3  = getNum('d_cc3');
+  const debits = dHsbc + dCc2 + dCc3;
+
+  const net = total - debits;
+
+  const store    = loadStore();
+  const carryOver = store.months[currentKey]?.carry_over ?? 0;
+  const savings   = net - carryOver;
+
+  document.getElementById('t-total').textContent  = gbp(total);
+  document.getElementById('t-debits').textContent = gbp(debits);
+  document.getElementById('t-net').textContent    = gbp(net);
+  document.getElementById('t-amber').textContent  = gbp(amber);
+
+  const savEl = document.getElementById('t-savings');
+  savEl.textContent = gbp(savings);
+  savEl.className   = 's-value ' + (savings >= 0 ? 'c-green' : 'c-red');
+}
+
+// ═══════════════════════════════════════════════════════
+// EDIT / SAVE STATE
+// ═══════════════════════════════════════════════════════
+function applyEditState() {
+  // All editable inputs (not the auto-calc amber field)
+  const inputs = document.querySelectorAll(
+    '#a_mac,#a_makm,#a_misa,#a_khsc,#a_premium,#a_kshare,#d_hsbc,#d_cc2,#d_cc3'
+  );
+  inputs.forEach(inp => {
+    if (editing) {
+      inp.removeAttribute('readonly');
+      inp.classList.remove('readonly-mode');
+    } else {
+      inp.setAttribute('readonly', '');
+      inp.classList.add('readonly-mode');
+    }
+  });
+
+  document.getElementById('btn-save').style.display  = editing ? '' : 'none';
+  document.getElementById('btn-edit').style.display  = editing ? 'none' : '';
+
+  const badge = document.getElementById('status-badge');
+  badge.textContent = editing ? 'Editing' : 'Saved';
+  badge.className   = 'status-badge ' + (editing ? 'status-editing' : 'status-saved');
+}
+
+// ═══════════════════════════════════════════════════════
+// SAVE / EDIT
+// ═══════════════════════════════════════════════════════
+function saveMonth() {
+  const store = loadStore();
+  const entry = store.months[currentKey];
+
+  entry.accounts = {
+    mac:     document.getElementById('a_mac').value,
+    makm:    document.getElementById('a_makm').value,
+    misa:    document.getElementById('a_misa').value,
+    khsc:    document.getElementById('a_khsc').value,
+    premium: document.getElementById('a_premium').value,
+    kshare:  document.getElementById('a_kshare').value
+  };
+  entry.debits = {
+    hsbc: document.getElementById('d_hsbc').value,
+    cc2:  document.getElementById('d_cc2').value,
+    cc3:  document.getElementById('d_cc3').value
+  };
+  entry.saved = true;
+  entry.date  = todayDate();
+
+  saveStore(store);
+  editing = false;
+  applyEditState();
+}
+
+function editMonth() {
+  const store = loadStore();
+  store.months[currentKey].saved = false;
+  saveStore(store);
+  editing = true;
+  applyEditState();
+}
+
+// ═══════════════════════════════════════════════════════
+// NEW MONTH
+// ═══════════════════════════════════════════════════════
+function newMonth() {
+  const store = loadStore();
+  const current = store.months[currentKey];
+
+  // Must be saved first
+  if (!current.saved) {
+    const go = confirm('The current month has unsaved changes.\nSave it now before creating a new month?');
+    if (!go) return;
+    saveMonth();
+  }
+
+  // Re-read after possible save
+  const fresh = loadStore();
+  const src   = fresh.months[currentKey];
+
+  // Calculate net position to carry forward
+  const mac     = parseFloat(src.accounts.mac)     || 0;
+  const makm    = parseFloat(src.accounts.makm)    || 0;
+  const misa    = parseFloat(src.accounts.misa)    || 0;
+  const khsc    = parseFloat(src.accounts.khsc)    || 0;
+  const premium = parseFloat(src.accounts.premium) || 0;
+  const kshare  = parseFloat(src.accounts.kshare)  || 0;
+  const amber   = khsc - kshare;
+  const total   = mac + makm + misa + khsc + premium - amber;
+  const debits  = (parseFloat(src.debits.hsbc) || 0)
+                + (parseFloat(src.debits.cc2)  || 0)
+                + (parseFloat(src.debits.cc3)  || 0);
+  const netPos  = total - debits;
+
+  const nextKey = nextMonthKey(currentKey);
+
+  if (fresh.months[nextKey]) {
+    // Already exists — just navigate to it
+    if (confirm(`A record for ${keyToLabel(nextKey)} already exists.\nSwitch to it?`)) {
+      currentKey = nextKey;
+      render();
+    }
+    return;
+  }
+
+  // Create new month, copying previous values, carrying net position
+  fresh.months[nextKey] = blankEntry(nextKey, netPos, src);
+  fresh.months[nextKey].saved = false;
+  saveStore(fresh);
+
+  currentKey = nextKey;
+  render();
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function navigateMonth(dir) {
+  const store = loadStore();
+  const keys  = sortedKeys(store);
+  const idx   = keys.indexOf(currentKey) + dir;
+  if (idx < 0 || idx >= keys.length) return;
+  currentKey = keys[idx];
+  render();
+}
+
+// ═══════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════
+function exportJSON() {
+  const data = loadStore();
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `cave-accounts-${new Date().toISOString().slice(0,10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════
+// IMPORT
+// ═══════════════════════════════════════════════════════
+function openImport()  { document.getElementById('import-overlay').classList.add('open'); }
+function closeImport() {
+  document.getElementById('import-overlay').classList.remove('open');
+  document.getElementById('import-text').value = '';
+}
+
+function runImport() {
+  const raw = document.getElementById('import-text').value.trim();
+  if (!raw) return alert('Nothing to import — paste your data first.');
+
+  // JSON backup?
+  if (raw.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed.months) throw new Error('Not a valid backup file.');
+      if (!confirm('Merge this backup with your existing data?\nExisting months will NOT be overwritten.')) return;
+      const store = loadStore();
+      let added = 0;
+      for (const [k, v] of Object.entries(parsed.months)) {
+        if (!store.months[k]) { store.months[k] = v; added++; }
+      }
+      saveStore(store);
+      const keys = sortedKeys(store);
+      currentKey = keys[keys.length - 1];
+      render();
+      closeImport();
+      alert(`Done. ${added} month(s) imported.`);
+      return;
+    } catch(e) {
+      alert('Could not read JSON: ' + e.message);
+      return;
+    }
+  }
+
+  // CSV from Google Sheets
+  importCSV(raw);
+}
+
+// Label → field mapping (flexible matching)
+const LABEL_MAP = {
+  'm a cave midland current':        ['accounts', 'mac'],
+  'm a cave midland':                ['accounts', 'mac'],
+  'm a & k m midland current':       ['accounts', 'makm'],
+  'm a & k m midland':               ['accounts', 'makm'],
+  'micks hsbc loyalty isa online':   ['accounts', 'misa'],
+  'micks hsbc loyalty isa':          ['accounts', 'misa'],
+  'kaths hsc loyalty isa online':    ['accounts', 'khsc'],
+  'kaths hsc loyalty isa':           ['accounts', 'khsc'],
+  'kaths hsbc loyalty isa online':   ['accounts', 'khsc'],
+  'premium bonds':                   ['accounts', 'premium'],
+  "kath's isa":                      ['accounts', 'kshare'],
+  'kath isa':                        ['accounts', 'kshare'],
+  'kath\'s share':                   ['accounts', 'kshare'],
+  'hsbc credit card':                ['debits',   'hsbc'],
+  'credit card':                     ['debits',   'cc2'],
+};
+
+function importCSV(text) {
+  const monthStr = prompt(
+    'What month is this CSV for?\nEnter as YYYY-MM (e.g. 2024-03 for March 2024):'
+  );
+  if (!monthStr) return;
+  if (!/^\d{4}-\d{2}$/.test(monthStr)) {
+    alert('Invalid format — please use YYYY-MM, e.g. 2024-03');
+    return;
+  }
+
+  const entry = blankEntry(monthStr, 0, null);
+  entry.saved = true;
+
+  const lines = text.split('\n');
+  for (const line of lines) {
+    // Split CSV respecting quoted values
+    const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
+    if (cols.length < 2) continue;
+
+    const label = cols[0].toLowerCase().replace(/\s+/g, ' ');
+    // Find the last non-empty column as the value
+    let rawVal = '';
+    for (let i = cols.length - 1; i >= 1; i--) {
+      if (cols[i] !== '') { rawVal = cols[i]; break; }
+    }
+    const val = parseFloat(rawVal.replace(/[£,\s]/g, ''));
+    if (isNaN(val)) continue;
+
+    const mapping = LABEL_MAP[label];
+    if (mapping) {
+      entry[mapping[0]][mapping[1]] = val.toString();
+    }
+  }
+
+  const store = loadStore();
+  const existed = !!store.months[monthStr];
+  if (existed && !confirm(`A record for ${keyToLabel(monthStr)} already exists. Overwrite it?`)) return;
+
+  store.months[monthStr] = entry;
+  saveStore(store);
+  currentKey = monthStr;
+  render();
+  closeImport();
+  alert(`Imported ${keyToLabel(monthStr)}.`);
+}
+</script>
+
+</body>
+</html>

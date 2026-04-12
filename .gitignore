@@ -1,0 +1,6 @@
+# Never commit exported backups - they contain financial data
+*.json
+*.csv
+
+# macOS
+.DS_Store
