@@ -565,7 +565,7 @@ function getNum(id) {
 }
 function gbp(n) {
   const neg = n < 0;
-  return (neg ? '−£' : '£') + Math.abs(n).toFixed(2);
+  return (neg ? '−£' : '£') + Math.abs(n).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 // ═══════════════════════════════════════════════════════
