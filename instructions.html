@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cave Family Accounts — Instructions</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+      color: #2c3e50;
+      background: #fff;
+      padding: 40px;
+      max-width: 800px;
+      margin: 0 auto;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      color: #888;
+      font-size: 0.85rem;
+      margin-bottom: 32px;
+    }
+
+    h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #fff;
+      padding: 7px 14px;
+      border-radius: 5px;
+      margin: 28px 0 12px;
+    }
+    h2.green  { background: #27ae60; }
+    h2.blue   { background: #2980b9; }
+    h2.dark   { background: #1a252f; }
+    h2.orange { background: #e67e22; }
+    h2.slate  { background: #566573; }
+
+    h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin: 16px 0 4px;
+      color: #2c3e50;
+    }
+
+    p { margin-bottom: 10px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      font-size: 0.88rem;
+    }
+    th {
+      background: #f4f6f8;
+      text-align: left;
+      padding: 7px 12px;
+      font-weight: 700;
+      border: 1px solid #dde2e8;
+    }
+    td {
+      padding: 7px 12px;
+      border: 1px solid #dde2e8;
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: #fafbfc; }
+
+    .note {
+      background: #fff8f0;
+      border-left: 4px solid #e67e22;
+      padding: 10px 14px;
+      border-radius: 0 5px 5px 0;
+      margin: 12px 0;
+      font-size: 0.88rem;
+    }
+    .tip {
+      background: #f0fff6;
+      border-left: 4px solid #27ae60;
+      padding: 10px 14px;
+      border-radius: 0 5px 5px 0;
+      margin: 12px 0;
+      font-size: 0.88rem;
+    }
+
+    code {
+      background: #f4f6f8;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 0.85em;
+      font-family: 'Menlo', 'Monaco', monospace;
+    }
+
+    .btn-sample {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #fff;
+      vertical-align: middle;
+    }
+    .s-green  { background: #27ae60; }
+    .s-blue   { background: #2980b9; }
+    .s-orange { background: #e67e22; }
+    .s-red    { background: #c0392b; }
+    .s-slate  { background: #566573; }
+
+    hr {
+      border: none;
+      border-top: 1px solid #e0e4ea;
+      margin: 32px 0;
+    }
+
+    @media print {
+      body { padding: 20px; font-size: 0.88rem; }
+      h2 { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .btn-sample { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .note, .tip { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="no-print" style="margin-bottom:24px;">
+    <button onclick="window.print()" style="padding:8px 20px;background:#1a252f;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:0.9rem;font-weight:700;">
+      Print / Save as PDF
+    </button>
+  </div>
+
+  <h1>Cave Family Accounts</h1>
+  <p class="subtitle">User Instructions — how to enter, save, and manage monthly account data</p>
+
+  <!-- OVERVIEW -->
+  <h2 class="dark">Overview</h2>
+  <p>
+    The app tracks the Cave family's bank account balances and credit card debits each month.
+    All data is saved locally in your browser — nothing is sent to the internet.
+    Each month is stored as a separate record and you can navigate between them using the arrows at the top of the page.
+  </p>
+
+  <!-- BANK ACCOUNTS -->
+  <h2 class="green">Bank Accounts Panel</h2>
+  <p>Enter the current balance for each account. All values are in pounds (£).</p>
+
+  <table>
+    <tr><th>Field</th><th>What to enter</th></tr>
+    <tr><td>M A Cave Midland Current</td><td>Mick's personal Midland current account balance</td></tr>
+    <tr><td>M A &amp; K M Midland Current</td><td>Joint Midland current account balance</td></tr>
+    <tr><td>Micks HSBC Loyalty ISA</td><td>Mick's HSBC ISA balance</td></tr>
+    <tr><td>Kaths HSC Loyalty ISA</td><td>The shared HSC ISA balance (covers both Kath's and Amber's portions)</td></tr>
+    <tr><td>Premium Bonds</td><td>Current Premium Bonds value</td></tr>
+    <tr><td>Kath's share of HSC ISA</td><td>The portion of the HSC ISA that belongs to Kath — update this whenever it changes</td></tr>
+    <tr style="background:#fff8f0"><td>Amber's Account <em>(calculated)</em></td><td>Automatically calculated: HSC ISA minus Kath's share. You cannot edit this directly.</td></tr>
+  </table>
+
+  <div class="note">
+    Amber's account is excluded from the family total — it is shown separately in the summary panel below.
+  </div>
+
+  <!-- CREDIT CARDS -->
+  <h2 class="blue">Credit Cards / Debits Panel</h2>
+  <p>Enter any outstanding balances owed on credit cards or other debits.</p>
+
+  <table>
+    <tr><th>Field</th><th>What to enter</th></tr>
+    <tr><td>HSBC Credit Card</td><td>Balance carried over from last month</td></tr>
+    <tr><td>Credit Card 2</td><td>Second credit card balance (if applicable)</td></tr>
+    <tr><td>Credit Card 3</td><td>Third credit card balance (if applicable)</td></tr>
+  </table>
+
+  <!-- TOTALS -->
+  <h2 class="dark">Summary / Totals Panel</h2>
+  <table>
+    <tr><th>Figure</th><th>What it means</th></tr>
+    <tr><td>Total</td><td>Sum of all family accounts (excluding Amber's portion)</td></tr>
+    <tr><td>Total Debits</td><td>Sum of all credit card / debit balances</td></tr>
+    <tr><td>Total − Debits</td><td>Net position: Total minus Debits</td></tr>
+    <tr><td>Amber's Account</td><td>Amber's calculated share — shown for reference, not included in Total</td></tr>
+    <tr><td>Total Savings / Debit this month</td><td>How much has been saved (or spent) compared to last month's net position. Green = saved money, Red = spent more than last month.</td></tr>
+  </table>
+
+  <!-- TOOLBAR BUTTONS -->
+  <h2 class="slate">Toolbar Buttons</h2>
+
+  <h3><span class="btn-sample s-green">+ New Month</span></h3>
+  <p>
+    Creates a record for the next calendar month. The current month must be saved first.
+    The new month starts with the same account values copied across, and the carry-over figure is set to this month's net position so the savings calculation is correct.
+  </p>
+
+  <h3><span class="btn-sample s-blue">Save</span></h3>
+  <p>
+    Locks the current month and marks it as saved. The status badge in the top-right of the toolbar changes from <strong>Editing</strong> (orange) to <strong>Saved</strong> (green).
+    You must save a month before creating a new one.
+  </p>
+
+  <h3><span class="btn-sample s-orange">Edit</span></h3>
+  <p>
+    Unlocks a previously saved month so you can make corrections. The Edit button is only visible when a month is in Saved state.
+  </p>
+
+  <h3><span class="btn-sample s-slate">Export JSON</span></h3>
+  <p>
+    Downloads a complete backup of all months as a <code>.json</code> file.
+    Keep a copy somewhere safe (e.g. a USB drive or cloud folder) so your data is not lost if you clear your browser or change device.
+  </p>
+
+  <h3><span class="btn-sample s-slate">Import</span></h3>
+  <p>
+    Lets you load data into the app from two sources:
+  </p>
+  <ul style="margin: 8px 0 10px 20px;">
+    <li style="margin-bottom:6px;"><strong>JSON backup</strong> — select a previously exported <code>.json</code> file. All months in the backup will be merged in. Existing months are not overwritten.</li>
+    <li><strong>Google Sheets CSV</strong> — download your Google Sheet as a <code>.csv</code> file (<em>File → Download → CSV</em>) and select it. You will be asked which month (YYYY-MM) the data belongs to.</li>
+  </ul>
+
+  <h3><span class="btn-sample s-red">Delete Month</span></h3>
+  <p>
+    Permanently removes the currently displayed month from the app. A confirmation prompt appears before anything is deleted.
+    Make sure you have a JSON backup if you may need the data later.
+  </p>
+
+  <!-- MONTH NAVIGATION -->
+  <h2 class="dark">Month Navigation</h2>
+  <p>
+    Use the <strong>← →</strong> arrows in the header to move between months.
+    The arrows are disabled when you are already at the oldest or most recent month.
+  </p>
+
+  <hr>
+
+  <!-- TIPS -->
+  <h2 class="green">Tips</h2>
+
+  <div class="tip">
+    <strong>Regular backups:</strong> Use <strong>Export JSON</strong> at the end of each month and save the file somewhere outside the browser (USB drive, email to yourself, cloud storage). Browser storage can be cleared accidentally.
+  </div>
+
+  <div class="tip">
+    <strong>Kath's share field:</strong> Only update this when the split between Kath and Amber actually changes — you don't need to re-enter it every month as the New Month button copies it forward automatically.
+  </div>
+
+  <div class="tip">
+    <strong>Importing old Google Sheets data:</strong> The app recognises both current and older account names from pre-2024 sheets, so historical CSVs should import cleanly. Closed accounts (Halifax, NS&amp;I, safe accounts) are silently ignored.
+  </div>
+
+</body>
+</html>

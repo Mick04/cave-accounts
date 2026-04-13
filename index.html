@@ -68,6 +68,7 @@
     .btn-green  { background: #27ae60; color: #fff; }
     .btn-blue   { background: #2980b9; color: #fff; }
     .btn-orange { background: #e67e22; color: #fff; }
+    .btn-red    { background: #c0392b; color: #fff; }
     .btn-slate  { background: #566573; color: #fff; }
 
     .toolbar-sep { width: 1px; height: 28px; background: rgba(255,255,255,0.15); margin: 0 4px; }
@@ -317,6 +318,8 @@
   <div class="toolbar-sep"></div>
   <button class="btn btn-slate"  onclick="exportJSON()" title="Download a backup file">Export JSON</button>
   <button class="btn btn-slate"  onclick="openImport()"  title="Import from CSV or JSON backup">Import</button>
+  <div class="toolbar-sep"></div>
+  <button class="btn btn-red"   onclick="deleteMonth()" title="Delete this month">Delete Month</button>
   <span class="status-badge status-editing" id="status-badge">Editing</span>
 </div>
 
@@ -727,6 +730,32 @@ function navigateMonth(dir) {
   const idx   = keys.indexOf(currentKey) + dir;
   if (idx < 0 || idx >= keys.length) return;
   currentKey = keys[idx];
+  render();
+}
+
+// ═══════════════════════════════════════════════════════
+// DELETE MONTH
+// ═══════════════════════════════════════════════════════
+function deleteMonth() {
+  if (!confirm(`Delete ${keyToLabel(currentKey)}?\nMake sure you have an Export JSON backup if you need this data later.`)) return;
+
+  const store = loadStore();
+  const keys  = sortedKeys(store);
+  const idx   = keys.indexOf(currentKey);
+
+  delete store.months[currentKey];
+  saveStore(store);
+
+  const remaining = sortedKeys(store);
+  if (remaining.length === 0) {
+    // No months left — create a fresh one for today
+    currentKey = todayKey();
+    store.months[currentKey] = blankEntry(currentKey, 0, null);
+    saveStore(store);
+  } else {
+    // Navigate to the previous month, or the first if we deleted the first
+    currentKey = remaining[Math.min(idx, remaining.length - 1)];
+  }
   render();
 }
 
