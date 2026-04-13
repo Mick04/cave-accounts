@@ -426,10 +426,17 @@
   <div class="modal">
     <h2>Import Data</h2>
     <p>
-      <strong>From a JSON backup</strong> — paste the contents of a previously exported <code>.json</code> file. This merges all months into the app.<br><br>
-      <strong>From Google Sheets CSV</strong> — in Sheets go to <em>File → Download → CSV (.csv)</em> for the month you want. Paste the CSV text below. You will be asked which month it belongs to.
+      <strong>From Google Sheets CSV</strong> — click "Choose File" and select the downloaded <code>.csv</code> file.<br><br>
+      <strong>From a JSON backup</strong> — click "Choose File" and select the <code>.json</code> backup file.
     </p>
-    <textarea id="import-text" placeholder="Paste JSON backup or CSV text here…"></textarea>
+    <div style="margin-bottom:14px;">
+      <label class="btn btn-blue" style="cursor:pointer;display:inline-block;">
+        Choose File
+        <input type="file" id="import-file" accept=".csv,.json" style="display:none" onchange="handleFileSelect(event)">
+      </label>
+      <span id="file-chosen" style="margin-left:12px;font-size:0.85rem;color:#666;">No file chosen</span>
+    </div>
+    <textarea id="import-text" placeholder="File contents will appear here after selecting a file, or paste text directly…" style="height:140px;"></textarea>
     <div class="modal-footer">
       <button class="btn btn-slate"  onclick="closeImport()">Cancel</button>
       <button class="btn btn-blue"   onclick="runImport()">Import</button>
@@ -747,6 +754,19 @@ function openImport()  { document.getElementById('import-overlay').classList.add
 function closeImport() {
   document.getElementById('import-overlay').classList.remove('open');
   document.getElementById('import-text').value = '';
+  document.getElementById('file-chosen').textContent = 'No file chosen';
+  document.getElementById('import-file').value = '';
+}
+
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  document.getElementById('file-chosen').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('import-text').value = e.target.result;
+  };
+  reader.readAsText(file);
 }
 
 function runImport() {
@@ -781,32 +801,73 @@ function runImport() {
   importCSV(raw);
 }
 
-// Label → field mapping (flexible matching)
+// Label → field mapping — covers current and old account names
 const LABEL_MAP = {
-  'm a cave midland current':        ['accounts', 'mac'],
-  'm a cave midland':                ['accounts', 'mac'],
-  'm a & k m midland current':       ['accounts', 'makm'],
-  'm a & k m midland':               ['accounts', 'makm'],
-  'micks hsbc loyalty isa online':   ['accounts', 'misa'],
-  'micks hsbc loyalty isa':          ['accounts', 'misa'],
-  'kaths hsc loyalty isa online':    ['accounts', 'khsc'],
-  'kaths hsc loyalty isa':           ['accounts', 'khsc'],
-  'kaths hsbc loyalty isa online':   ['accounts', 'khsc'],
-  'premium bonds':                   ['accounts', 'premium'],
-  "kath's isa":                      ['accounts', 'kshare'],
-  'kath isa':                        ['accounts', 'kshare'],
-  'kath\'s share':                   ['accounts', 'kshare'],
-  'hsbc credit card':                ['debits',   'hsbc'],
-  'credit card':                     ['debits',   'cc2'],
+  // Current accounts
+  'm a cave midland current':         ['accounts', 'mac'],
+  'm a cave midland':                 ['accounts', 'mac'],
+  'm a & k m midland current':        ['accounts', 'makm'],
+  'm a & k m midland':                ['accounts', 'makm'],
+  'micks hsbc loyalty isa online':    ['accounts', 'misa'],
+  'micks hsbc loyalty isa':           ['accounts', 'misa'],
+  'kaths hsc loyalty isa online':     ['accounts', 'khsc'],
+  'kaths hsc loyalty isa':            ['accounts', 'khsc'],
+  'premium bonds':                    ['accounts', 'premium'],
+  "kath's isa":                       ['accounts', 'kshare'],
+  'kath isa':                         ['accounts', 'kshare'],
+  "kath's share":                     ['accounts', 'kshare'],
+  // Old account names (pre-2024 sheets) — map to nearest current field
+  'micks midland isa saver online':   ['accounts', 'misa'],
+  'micks midland isa saver':          ['accounts', 'misa'],
+  'ns&i':                             null,   // redundant — ignore
+  'onlin saver rany day closed':      null,
+  'online saver rainy day closed':    null,
+  'halifax current closed':           null,
+  'kath safe':                        null,
+  'mick safe':                        null,
+  // Debits
+  'hsbc credit card':                 ['debits', 'hsbc'],
+  'credit card':                      ['debits', 'cc2'],
+  'c/c june':                         ['debits', 'cc3'],
 };
+
+// Detect delimiter and split a line into columns
+function parseCSVLine(line) {
+  // If the line contains tabs, use tab as delimiter
+  if (line.includes('\t')) {
+    return line.split('\t').map(c => c.replace(/^"|"$/g, '').trim());
+  }
+  // Otherwise parse as proper CSV (handles commas inside quoted values)
+  const cols = [];
+  let inQuote = false;
+  let cur = '';
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQuote = !inQuote; }
+    else if (ch === ',' && !inQuote) { cols.push(cur.trim()); cur = ''; }
+    else { cur += ch; }
+  }
+  cols.push(cur.trim());
+  return cols;
+}
+
+// Parse a £ value string — strips £, commas, spaces; handles negatives
+function parseGBP(str) {
+  if (!str) return NaN;
+  const s = str.replace(/\s/g, '');
+  const neg = s.includes('-');
+  // Strip everything except digits and decimal point
+  const num = parseFloat(s.replace(/[^0-9.]/g, ''));
+  return isNaN(num) ? NaN : (neg ? -num : num);
+}
 
 function importCSV(text) {
   const monthStr = prompt(
-    'What month is this CSV for?\nEnter as YYYY-MM (e.g. 2024-03 for March 2024):'
+    'What month is this CSV for?\nEnter as YYYY-MM  (e.g. 2016-01 for January 2016):'
   );
   if (!monthStr) return;
   if (!/^\d{4}-\d{2}$/.test(monthStr)) {
-    alert('Invalid format — please use YYYY-MM, e.g. 2024-03');
+    alert('Invalid format — please use YYYY-MM, e.g. 2016-01');
     return;
   }
 
@@ -814,23 +875,37 @@ function importCSV(text) {
   entry.saved = true;
 
   const lines = text.split('\n');
+
+  // Row 1, column E (index 4) = carry-over from previous month
+  if (lines.length > 0) {
+    const first = parseCSVLine(lines[0]);
+    const co = parseGBP(first[4]);
+    if (!isNaN(co)) entry.carry_over = co;
+  }
+
   for (const line of lines) {
-    // Split CSV respecting quoted values
-    const cols = line.split(',').map(c => c.replace(/^"|"$/g, '').trim());
-    if (cols.length < 2) continue;
+    if (!line.trim()) continue;
+    const cols = parseCSVLine(line);
 
-    const label = cols[0].toLowerCase().replace(/\s+/g, ' ');
-    // Find the last non-empty column as the value
-    let rawVal = '';
-    for (let i = cols.length - 1; i >= 1; i--) {
-      if (cols[i] !== '') { rawVal = cols[i]; break; }
-    }
-    const val = parseFloat(rawVal.replace(/[£,\s]/g, ''));
-    if (isNaN(val)) continue;
+    // The sheet has two panels side by side:
+    //   Panel A: col 0 = account label,  col 1 = value
+    //   Panel B: col 2 = debit label,    col 3 = value
+    const panels = [
+      [cols[0], cols[1]],
+      [cols[2], cols[3]],
+    ];
 
-    const mapping = LABEL_MAP[label];
-    if (mapping) {
-      entry[mapping[0]][mapping[1]] = val.toString();
+    for (const [rawLabel, rawVal] of panels) {
+      if (!rawLabel) continue;
+      const label = rawLabel.toLowerCase().replace(/\s+/g, ' ').trim();
+      const val   = parseGBP(rawVal);
+      if (isNaN(val)) continue;
+
+      const mapping = LABEL_MAP[label];
+      if (mapping) {
+        entry[mapping[0]][mapping[1]] = val.toString();
+      }
+      // null mapping = known-but-ignored label — skip silently
     }
   }
 
